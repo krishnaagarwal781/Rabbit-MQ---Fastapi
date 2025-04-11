@@ -33,7 +33,7 @@ channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
 @app.post("/submit")
 def submit_task(req: Request):
     if req.is_translation:
-        payload = req.dict()
+        payload = req.model_dump()
         channel.basic_publish(
             exchange="",
             routing_key=RABBITMQ_QUEUE,

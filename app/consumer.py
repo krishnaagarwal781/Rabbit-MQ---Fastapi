@@ -17,12 +17,20 @@ channel = connection.channel()
 channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
 
 translator = Translator()
+message_counter = 0  # Counter for testing
 
 def callback(ch, method, properties, body):
+    global message_counter
+    message_counter += 1
+
     payload = json.loads(body)
-    print(f"📥 Received: {payload}")
+    print(f"📥 Received ({message_counter}): {payload}")
     
-    translated = translator.translate(payload['purpose_description'], dest='es')  # Example: Spanish
+    if message_counter == 6:
+        print("💥 Simulating error on message 6...")
+        raise Exception("Simulated crash")
+
+    translated = translator.translate(payload['purpose_description'], dest='es')
     print(f"🌐 Translated for {payload['user_name']}: {translated.text}")
     
     ch.basic_ack(delivery_tag=method.delivery_tag)
