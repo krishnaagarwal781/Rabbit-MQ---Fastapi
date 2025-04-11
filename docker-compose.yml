@@ -1,0 +1,16 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"       # AMQP (for apps to connect)
+      - "15672:15672"     # HTTP (management UI)
+    environment:
+      RABBITMQ_DEFAULT_USER: superuser
+      RABBITMQ_DEFAULT_PASS: superpassword
+    networks:
+      - rabbitnet
+
+networks:
+  rabbitnet:
+    driver: bridge
