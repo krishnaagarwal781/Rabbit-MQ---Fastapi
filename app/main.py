@@ -3,14 +3,18 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import pika
 import json
+import requests
+from requests.auth import HTTPBasicAuth
 
 app = FastAPI()
 
 RABBITMQ_USER = "superuser"
 RABBITMQ_PASSWORD = "superpassword"
-RABBITMQ_HOST = "localhost"
+RABBITMQ_HOST = "139.5.190.127"
 RABBITMQ_PORT = 5672
 RABBITMQ_QUEUE = "translation_jobs"
+api_url = f"http://{RABBITMQ_HOST}:15672/api"
+vhost_name = "production"
 
 
 # Define request schema
@@ -20,10 +24,21 @@ class Request(BaseModel):
     is_translation: bool
 
 
+def create_vhost():
+    url = f"{api_url}/vhosts/{vhost_name}"
+    response = requests.put(url, auth=HTTPBasicAuth(RABBITMQ_USER, RABBITMQ_PASSWORD))
+    print(f"Create VHost: {response.status_code} {response.text}")
+
+
+create_vhost()
+
 # Setup RabbitMQ connection (runs once)
 credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASSWORD)
 parameters = pika.ConnectionParameters(
-    host=RABBITMQ_HOST, port=RABBITMQ_PORT, credentials=credentials
+    host=RABBITMQ_HOST,
+    port=RABBITMQ_PORT,
+    virtual_host=vhost_name,
+    credentials=credentials,
 )
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
